@@ -22,7 +22,7 @@ Installation of Gophish is dead-simple - just download and extract the zip conta
 ### Building From Source
 **If you are building from source, please note that Gophish requires Go v1.10 or above!**
 
-To build Gophish from source, simply run ```git clone https://github.com/gophish/gophish.git``` and ```cd``` into the project source directory. Then, run ```go build```. After this, you should have a binary called ```gophish``` in the current directory.
+To build Gophish from source, simply run ```git clone https://github.com/manisashank/vibe-edited-gophish.git``` and ```cd``` into the project source directory. Then, run ```go build```. After this, you should have a binary called ```gophish``` in the current directory.
 
 ### Setup
 After running the Gophish binary, open an Internet browser to https://localhost:3333 and login with the default username and password listed in the log output.
