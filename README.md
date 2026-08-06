@@ -9,6 +9,23 @@ Gophish: Open-Source Phishing Toolkit
 
 [Gophish](https://getgophish.com) is an open-source phishing toolkit designed for businesses and penetration testers. It provides the ability to quickly and easily setup and execute phishing engagements and security awareness training.
 
+### About This Fork
+
+This is a modified ("vibe-edited") version of the original [Gophish](https://github.com/gophish/gophish) project.
+
+In upstream Gophish, opening an emailed attachment isn't tracked as its own event - a recipient opening a Word document attachment shows up the same as (or gets conflated with) opening the email itself, so there's no way to tell whether someone actually opened the attached file at all, independent of the email or the link. This fork adds first-class, **independent attachment-open tracking**, so a campaign's results can distinguish every one of these outcomes per recipient:
+
+- **Email Sent** - the email was successfully handed off to the SMTP server
+- **Email Opened** - the recipient opened the email (the tracking pixel in the email body loaded)
+- **Attachment Opened** - the recipient opened the attached file (Word document, HTML attachment, etc.) - tracked separately from the email/link events, via its own tracking pixel embedded in the attachment
+- **Clicked Link** - the recipient clicked the phishing link in the email
+- **Submitted Data** - the recipient submitted credentials/data on the landing page
+- **Email Reported** - the recipient reported the email as suspicious
+
+These are all recorded as distinct events and surfaced as separate stats/charts on the dashboard and campaign results pages, with a defined priority so a recipient's status is never downgraded (e.g. someone who clicked the link and *then* opened the attachment still shows as "Clicked Link", not "Attachment Opened").
+
+See [docs/ATTACHMENT_TRACKING.md](docs/ATTACHMENT_TRACKING.md) for how to wire up attachment tracking in your own email templates.
+
 ### Install
 
 Installation of Gophish is dead-simple - just download and extract the zip containing the [release for your system](https://github.com/gophish/gophish/releases/), and run the binary. Gophish has binary releases for Windows, Mac, and Linux platforms.

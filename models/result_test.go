@@ -75,6 +75,29 @@ func (s *ModelsSuite) TestResultVariableStatus(ch *check.C) {
 	}
 }
 
+// TestHandleAttachmentOpenedRespectsStatusPriority verifies that opening an
+// attachment never downgrades a Result's status when the recipient has
+// already reached a higher-priority state (Clicked Link, Email Opened, or
+// Submitted Data outrank Attachment Opened per docs/ATTACHMENT_TRACKING.md).
+func (s *ModelsSuite) TestHandleAttachmentOpenedRespectsStatusPriority(ch *check.C) {
+	cases := []struct {
+		initial  string
+		expected string
+	}{
+		{StatusSending, EventAttachmentOpened},
+		{EventSent, EventAttachmentOpened},
+		{EventOpened, EventOpened},
+		{EventClicked, EventClicked},
+		{EventDataSubmit, EventDataSubmit},
+	}
+	for _, tc := range cases {
+		r := Result{Status: tc.initial}
+		err := r.HandleAttachmentOpened(EventDetails{})
+		ch.Assert(err, check.Equals, nil)
+		ch.Assert(r.Status, check.Equals, tc.expected)
+	}
+}
+
 func (s *ModelsSuite) TestDuplicateResults(ch *check.C) {
 	group := Group{Name: "Test Group"}
 	group.Targets = []Target{

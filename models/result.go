@@ -113,8 +113,10 @@ func (r *Result) HandleAttachmentOpened(details EventDetails) error {
 	if err != nil {
 		return err
 	}
-	// Don't update the status if the user already submitted data to the campaign
-	if r.Status == EventDataSubmit {
+	// Don't update the status if the user already clicked the link, opened
+	// the email, or submitted data to the campaign - all of those outrank
+	// an attachment open.
+	if r.Status == EventClicked || r.Status == EventOpened || r.Status == EventDataSubmit {
 		return nil
 	}
 	r.Status = EventAttachmentOpened

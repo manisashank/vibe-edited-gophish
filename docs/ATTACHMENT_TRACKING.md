@@ -8,36 +8,43 @@ Gophish now supports tracking when recipients open attachments separately from w
 
 ## New Template Variables
 
-### `{{.AttachmentTracker}}`
+There are two variables, and which one you use depends entirely on whether the
+attachment is an **HTML file** or an **Office document (.docx/.docm/.pptx/.xlsx/.xlsm)**.
+Office documents are XML, not HTML - an HTML `<img>` tag has no meaning inside
+one and using the wrong variable there will corrupt the file. Gophish will
+reject the wrong combination with a clear error at template-save time, but
+it's worth understanding why so the field is actually functional in Word.
 
-A tracking image HTML tag designed for use inside attachments (e.g., Word documents).
+### `{{.AttachmentTracker}}` / `{{.Tracker}}`
 
-**Usage:**
+A tracking image **HTML `<img>` tag**, fully rendered:
 ```html
-<img alt='' style='display: none' src='{{.AttachmentTrackingURL}}'/>
-```
-
-Or use the shorthand which generates the full img tag:
-```
-{{.AttachmentTracker}}
+<img alt='' style='display: none' src='https://your-phishing-url/track/attachment?rid=xxxxx'/>
 ```
 
 **When to use:**
-- Inside `.docx` Word documents
-- Inside `.html` attachments
-- Any attachment that can render HTML/images
+- Inside the **email HTML body** (`{{.Tracker}}`)
+- Inside **`.html` attachments** (`{{.AttachmentTracker}}`)
+- Anywhere the surrounding document is genuinely HTML and can render an `<img>` tag
 
-### `{{.AttachmentTrackingURL}}`
+**Do not use inside `.docx`/`.docm`/`.pptx`/`.xlsx`/`.xlsm` attachments.** Those
+files are XML containers (WordprocessingML/DrawingML/SpreadsheetML), and an
+HTML `<img>` element is not valid content there - Word will report the file
+as corrupted. Gophish now detects and rejects this combination when you save
+the template, with a message pointing you at `{{.AttachmentTrackingURL}}` instead.
 
-The raw URL for attachment tracking, without the img tag wrapper.
+### `{{.AttachmentTrackingURL}}` / `{{.TrackingURL}}`
 
-**URL Format:**
+The raw tracking URL, with no HTML wrapper:
 ```
 https://your-phishing-url/track/attachment?rid=xxxxx
 ```
 
 **When to use:**
-- When you need just the URL (e.g., for custom image tags or other purposes)
+- Inside `.docx`/`.docm`/`.pptx`/`.xlsx`/`.xlsm` attachments - this is the **only**
+  variable that's safe to use there, and it must be wired into a real Office
+  field (see the walkthrough below), not typed as plain visible text.
+- Anywhere else you need just the URL (custom image tags, scripting, etc.)
 
 ## Comparison with Email Tracking
 
@@ -88,17 +95,50 @@ If a recipient opens an attachment but has already opened the email or clicked a
 
 ## Example: Word Document with Tracking
 
-To track when a Word document attachment is opened:
+To track when a Word document attachment is opened, `{{.AttachmentTrackingURL}}`
+needs to be wired into a real Word **field** - not typed as plain visible text.
+Typed text just becomes a readable URL on the page; it never causes Word to
+fetch anything.
 
-1. Create your `.docx` document
-2. Add an image placeholder or use the Web Parts feature
-3. Reference the `{{.AttachmentTrackingURL}}` for the image source
-4. When the document is opened (and internet connected), the tracking pixel will load
+1. In Word, place your cursor where the tracking image should go.
+2. Press `Ctrl+F9` to insert a pair of empty field braces (`{ }`) - don't type
+   braces yourself, Word needs to create real field delimiters.
+3. Between the braces, type:
+   ```
+   INCLUDEPICTURE "{{.AttachmentTrackingURL}}" \* MERGEFORMAT
+   ```
+4. Press `F9` to update the field (or `Alt+F9` to toggle field codes off) and save.
+5. Upload the `.docx` as an attachment on your email template. Gophish will
+   substitute the real tracking URL into the field when the campaign sends.
+6. When the recipient opens the document (with internet access and remote
+   content allowed - see the caveat below), Word requests the image and the
+   attachment-open event is recorded.
 
-**Note:** Word documents only load external images when:
-- The recipient is connected to the internet
-- The recipient hasn't blocked external content loading
-- The document is opened in an application that renders external images
+### Gotchas
+
+- **Word silently splits typed text across multiple XML runs.** Autocorrect,
+  spell-check, and grammar-check can all fragment a variable you've typed
+  (`{{.AttachmentTrackingURL}}`) into multiple `<w:r>` runs behind the scenes,
+  even though it looks like one continuous line on screen. Gophish repairs
+  this automatically before templating, but if you still hit a template
+  error, try disabling autocorrect-as-you-type first, or paste the variable
+  with **Paste Special → Unformatted Text** instead of typing it directly.
+- **Word may URL-encode the field's contents**, turning `{{.Foo}}` into
+  something like `%7B%7B.Foo%7D%7D`. Gophish detects and reverses this
+  automatically (case-insensitively) before templating.
+- **`{{.Tracker}}` / `{{.AttachmentTracker}}` (the HTML `<img>` tag variables)
+  are rejected outright** if used inside a `.docx`/`.docm`/`.pptx`/`.xlsx`/`.xlsm`
+  attachment, at template-save time, with a message pointing you at
+  `{{.AttachmentTrackingURL}}` instead - see [New Template Variables](#new-template-variables) above.
+- **Word/Outlook may not auto-fetch the image at all**, independent of any of
+  the above. Word blocks automatic loading of remote linked content by
+  default for files that carry the "downloaded from the internet"/email
+  mark of the web (Protected View, no auto-update of fields), so the
+  recipient may need to click through a trust prompt or manually update the
+  field (`F9`) before the pixel fires. This is a property of Word's own
+  security model, not something Gophish can control - test the actual
+  end-to-end behavior in your target environment rather than assuming it
+  fires unconditionally.
 
 ## Architecture Note: Event-Based Counting
 
@@ -112,8 +152,18 @@ The frontend uses server-provided `campaign.stats` for all charts, ensuring data
 
 ## Breaking Changes
 
-Existing templates that use `{{.Tracker}}` inside attachments will continue to work but will record events as "Email Opened" instead of the new "Attachment Opened" event.
+Existing templates that use `{{.Tracker}}` inside an **HTML attachment** will
+continue to work, but will record an "Email Opened" event rather than
+"Attachment Opened" - use `{{.AttachmentTracker}}` there instead to get the
+separate event.
+
+Existing templates that use `{{.Tracker}}` or `{{.AttachmentTracker}}` inside an
+**Office document attachment** (`.docx`/`.docm`/`.pptx`/`.xlsx`/`.xlsm`) will now
+be **rejected with an error when you save the template**, rather than silently
+producing a file that Word reports as corrupted. Switch those attachments to
+`{{.AttachmentTrackingURL}}`, wired into a real Office field as described above.
 
 To use the new separate tracking:
-1. Update your email templates to use `{{.Tracker}}` in the email body only
-2. Update your attachments to use `{{.AttachmentTracker}}` or `{{.AttachmentTrackingURL}}` instead
+1. Update your email templates to use `{{.Tracker}}` in the email body only.
+2. Update HTML attachments to use `{{.AttachmentTracker}}`.
+3. Update Office document attachments to use `{{.AttachmentTrackingURL}}` via a real field.
