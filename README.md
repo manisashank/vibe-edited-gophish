@@ -3,7 +3,7 @@
 Gophish
 =======
 
-![Build Status](https://github.com/gophish/gophish/workflows/CI/badge.svg) [![GoDoc](https://godoc.org/github.com/gophish/gophish?status.svg)](https://godoc.org/github.com/gophish/gophish)
+![Build Status](https://github.com/manisashank/vibe-edited-gophish/workflows/CI/badge.svg)
 
 Gophish: Open-Source Phishing Toolkit
 
@@ -26,20 +26,36 @@ These are all recorded as distinct events and surfaced as separate stats/charts 
 
 See [docs/ATTACHMENT_TRACKING.md](docs/ATTACHMENT_TRACKING.md) for how to wire up attachment tracking in your own email templates.
 
-### Install
-
-Installation of Gophish is dead-simple - just download and extract the zip containing the [release for your system](https://github.com/gophish/gophish/releases/), and run the binary. Gophish has binary releases for Windows, Mac, and Linux platforms.
-
 ### Key Features
 - **Phishing Campaigns**: Launch and track campaigns.
 - **Attachment Tracking**: Track when recipients open attachments (Word, HTML) separately from email opens. [Read the Guide](docs/ATTACHMENT_TRACKING.md)
 - **Email Tracking**: Know when emails are opened.
 - **Click Tracking**: Track links clicked and credentials submitted.
 
-### Building From Source
-**If you are building from source, please note that Gophish requires Go v1.10 or above!**
+### Usage
 
-To build Gophish from source, simply run ```git clone https://github.com/manisashank/vibe-edited-gophish.git``` and ```cd``` into the project source directory. Then, run ```go build```. After this, you should have a binary called ```gophish``` in the current directory.
+#### Download a release (Windows, Linux, macOS)
+
+The easiest way to run this fork is to download a prebuilt release for your platform from the
+[**Releases page**](https://github.com/manisashank/vibe-edited-gophish/releases):
+
+- **Windows**: download `gophish-<version>-windows-64bit.zip`, extract it, and run `gophish.exe`.
+- **Linux**: download `gophish-<version>-linux-64bit.zip`, extract it, and run `./gophish`.
+- **macOS**: download `gophish-<version>-osx-64bit.zip`, extract it, and run `./gophish`.
+
+Run the binary from the directory it was extracted into (it expects `config.json`, `templates/`, `static/`, and `db/` alongside it).
+
+#### Building from source
+
+Building from source requires **Go v1.21 or above**, plus a C compiler (needed for the SQLite3 database driver via cgo - e.g. `build-essential`/`gcc` on Linux, Xcode Command Line Tools on macOS, or a MinGW-w64 toolchain on Windows).
+
+```
+git clone https://github.com/manisashank/vibe-edited-gophish.git
+cd vibe-edited-gophish
+go build
+```
+
+This produces a `gophish` (or `gophish.exe` on Windows) binary in the current directory.
 
 ### Setup
 After running the Gophish binary, open an Internet browser to https://localhost:3333 and login with the default username and password listed in the log output.
@@ -50,11 +66,11 @@ time="2020-07-29T01:24:08Z" level=info msg="Please login with the username admin
 
 ### Documentation
 
-Documentation can be found on [site](http://getgophish.com/documentation). Find something missing? Let us know by filing an issue!
+General Gophish documentation can be found on the upstream project's [site](http://getgophish.com/documentation) - note that it describes upstream behavior and doesn't cover this fork's changes. For attachment tracking specifically (the main thing this fork adds), see [docs/ATTACHMENT_TRACKING.md](docs/ATTACHMENT_TRACKING.md).
 
 ### Issues
 
-Find a bug? Want more features? Find something missing in the documentation? Let us know! Please don't hesitate to [file an issue](https://github.com/gophish/gophish/issues/new) and we'll get right on it.
+Find a bug? Want more features? Find something missing in the documentation? Please [file an issue](https://github.com/manisashank/vibe-edited-gophish/issues/new) on this repository.
 
 ### License
 ```
