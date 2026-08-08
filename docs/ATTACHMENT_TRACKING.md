@@ -95,10 +95,18 @@ If a recipient opens an attachment but has already opened the email or clicked a
 
 ## Example: Word Document with Tracking
 
-To track when a Word document attachment is opened, `{{.AttachmentTrackingURL}}`
-needs to be wired into a real Word **field** - not typed as plain visible text.
-Typed text just becomes a readable URL on the page; it never causes Word to
-fetch anything.
+A ready-to-use, verified example is included at
+[`docs/examples/attachment-tracking-example.docx`](examples/attachment-tracking-example.docx) -
+upload it as-is to a template's attachments to try attachment tracking out
+without building a document from scratch. It correctly wires
+`{{.AttachmentTrackingURL}}` into a real `INCLUDEPICTURE` field (see the
+walkthrough below for how it's built), and has been verified to process
+cleanly through Gophish's template validation.
+
+To build your own from scratch, `{{.AttachmentTrackingURL}}` needs to be
+wired into a real Word **field** - not typed as plain visible text. Typed
+text just becomes a readable URL on the page; it never causes Word to fetch
+anything.
 
 1. In Word, place your cursor where the tracking image should go.
 2. Press `Ctrl+F9` to insert a pair of empty field braces (`{ }`) - don't type

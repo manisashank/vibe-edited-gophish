@@ -13,3 +13,11 @@ static/js/jquery* linguist-vendored
 static/js/ui-bootstrap-* linguist-vendored
 static/js/datatables* linguist-vendored
 static/js/sweetalert2.min.js linguist-vendored
+
+# Office documents are zip-based binary formats - never apply line-ending
+# normalization to them.
+*.docx binary
+*.docm binary
+*.pptx binary
+*.xlsx binary
+*.xlsm binary
